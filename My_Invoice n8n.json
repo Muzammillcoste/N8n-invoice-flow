@@ -1,0 +1,813 @@
+{
+  "name": "My Invoice",
+  "nodes": [
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        40
+      ],
+      "id": "6e374239-d6c2-43a6-b4bd-066928708f36",
+      "name": "Wait",
+      "webhookId": "b06953ff-858b-4894-8c8c-acecbe27afd7"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.llamaindex.ai/api/parsing/job/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        20
+      ],
+      "id": "f7045685-d2f9-4998-a09f-66843828da4f",
+      "name": "Check status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KzwkByYzm7Tt86gq",
+          "name": "Header Auth account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloud.llamaindex.ai/api/parsing/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        0
+      ],
+      "id": "078be202-2a10-494e-8f09-56e6817e2ff9",
+      "name": "Post invoice",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KzwkByYzm7Tt86gq",
+          "name": "Header Auth account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        220,
+        0
+      ],
+      "id": "685d4808-5e6a-4978-8b70-380bea7fefaf",
+      "name": "Download Invoice",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "xKpoLWQmV74T8CkG",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "19b8ucfZm0cJVOMYbZrQd2iMWGMbkQLa8",
+          "mode": "list",
+          "cachedResultName": "Invoice",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/19b8ucfZm0cJVOMYbZrQd2iMWGMbkQLa8"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8721d215-f803-47a0-a62c-2b330f826223",
+      "name": "Trigger if Invoice Created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "xKpoLWQmV74T8CkG",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.llamaindex.ai/api/parsing/job/{{ $('Check status').item.json.id }}/result/markdown",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1480,
+        20
+      ],
+      "id": "15af35fc-324f-4570-b62e-f5ab8b40c385",
+      "name": "Get PDF in MarkDown",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KzwkByYzm7Tt86gq",
+          "name": "Header Auth account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1020,
+        240
+      ],
+      "id": "1a9e7671-5e75-40f7-a7f2-050d796ba887",
+      "name": "Wait1",
+      "webhookId": "b440367d-a2a2-4b2a-8d44-c2275fd063e5"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.markdown }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"InvoiceNumber\": { \"type\": \"string\" },\n    \"Date\": { \"type\": \"string\", \"format\": \"date\" },\n    \"BillingTo\": { \"type\": \"string\" },\n    \"Company\": { \"type\": \"string\" },\n    \"Address\": { \"type\": \"string\" },\n    \"Items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"Description\": { \"type\": \"string\" },\n          \"UnitPrice\": { \"type\": \"number\" },\n          \"Quantity\": { \"type\": \"integer\" },\n          \"Subtotal\": { \"type\": \"number\" },\n          \"Tax\": { \"type\": \"number\" },\n          \"Total\": { \"type\": \"number\" }\n        },\n        \"required\": [\"Description\", \"UnitPrice\", \"Quantity\", \"Subtotal\", \"Tax\", \"Total\"]\n      }\n    },\n    \"Subtotal\": { \"type\": \"number\" },\n    \"Discount\": { \"type\": \"number\" },\n    \"GrandTotal\": { \"type\": \"number\" }\n  },\n  \"required\": [\"InvoiceNumber\", \"Date\", \"BillingTo\", \"Company\", \"Address\", \"Items\", \"Subtotal\", \"Discount\", \"GrandTotal\"]\n}\n",
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        20
+      ],
+      "id": "485c4d7e-b6bb-4f6c-953c-ecaaac40f41f",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1-distill-llama-70b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        320
+      ],
+      "id": "37215ebe-7ba8-4512-a08d-490338bd3947",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "d7BYrgtfgFBHMTUS",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "customObject",
+        "customObject": "Invoice__c",
+        "customFieldsUi": {
+          "customFieldsValues": [
+            {
+              "fieldId": "Address__c",
+              "value": "={{ $json.output.Address }}"
+            },
+            {
+              "fieldId": "BillingTo__c",
+              "value": "={{ $json.output.BillingTo }}"
+            },
+            {
+              "fieldId": "Company__c",
+              "value": "={{ $json.output.Company }}"
+            },
+            {
+              "fieldId": "Date__c",
+              "value": "={{ $json.output.Date }}"
+            },
+            {
+              "fieldId": "InvoiceNumber__c",
+              "value": "={{ $json.output.InvoiceNumber }}"
+            },
+            {
+              "fieldId": "Subtotal__c",
+              "value": "={{ $json.output.Subtotal }}"
+            },
+            {
+              "fieldId": "Discount__c",
+              "value": "={{ $json.output.Discount }}"
+            },
+            {
+              "fieldId": "GrandTotal__c",
+              "value": "={{ $json.output.GrandTotal }}"
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        2180,
+        180
+      ],
+      "id": "a7fa01dc-1198-4f59-b724-dee3a9b24b1a",
+      "name": "create Invoice",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "Y8yG3ILrucjMhtKK",
+          "name": "Salesforce account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        3140,
+        40
+      ],
+      "id": "3c68d411-76de-4d3e-b374-ee036addc499",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1b0f30cc-cbfb-48ed-98e6-3b93f228bbc0",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "SUCCESS",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1160,
+        20
+      ],
+      "id": "d538ee0f-17ff-4fb4-a8c8-d3fc887bb17b",
+      "name": "if success-true"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c81d5ca2-9f85-4036-b6cc-f6cfb4ff83f8",
+              "leftValue": "={{ $json.success.toString() }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        180
+      ],
+      "id": "12764e19-d240-43a7-b712-75a56bb041c2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Getting Error while creating invoice "
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2600,
+        340
+      ],
+      "id": "4bf79e85-51a5-4b51-b1b8-78cbcef04186",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "resource": "customObject",
+        "customObject": "LineItems__c",
+        "customFieldsUi": {
+          "customFieldsValues": [
+            {
+              "fieldId": "Invoice__c",
+              "value": "={{ $node[\"create Invoice\"].json.id }}\n"
+            },
+            {
+              "fieldId": "Description__c",
+              "value": "={{ $json.output.Items.Description }}"
+            },
+            {
+              "fieldId": "UnitPrice__c",
+              "value": "={{ $json.output.Items.UnitPrice }}"
+            },
+            {
+              "fieldId": "Quantity__c",
+              "value": "={{ $json.output.Items.Quantity }}"
+            },
+            {
+              "fieldId": "Subtotal__c",
+              "value": "={{ $json.output.Items.Subtotal }}"
+            },
+            {
+              "fieldId": "Tax__c",
+              "value": "={{ $json.output.Items.Tax }}"
+            },
+            {
+              "fieldId": "Total__c",
+              "value": "={{ $json.output.Items.Total }}"
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        3840,
+        100
+      ],
+      "id": "96f236aa-4c01-4ce6-a841-1f1e807aec28",
+      "name": "Crete line items",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "Y8yG3ILrucjMhtKK",
+          "name": "Salesforce account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3620,
+        60
+      ],
+      "id": "41ec5bd7-2a53-4311-966c-6062d31120be",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52697c96-7bef-4bbf-ab55-e152f79d839a",
+              "name": "output.Items",
+              "value": "={{ $json.output.Items }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3400,
+        60
+      ],
+      "id": "fbf4a4b6-9cd1-42f2-9235-abd9e865cc8f",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {
+    "Trigger if Invoice Created": [
+      {
+        "json": {
+          "kind": "drive#file",
+          "fileExtension": "pdf",
+          "copyRequiresWriterPermission": false,
+          "md5Checksum": "2978a6bc4cb11d0d110c15861343aa28",
+          "writersCanShare": true,
+          "viewedByMe": true,
+          "mimeType": "application/pdf",
+          "parents": [
+            "19b8ucfZm0cJVOMYbZrQd2iMWGMbkQLa8"
+          ],
+          "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBN3L-t7Qr2W9yX50cQz1Qz4sOR8xbRA-Buj2UGHHJfcPKB10109jnetNr_kHkVQJhwx6lP7Oq5OjeS20pSfweBWrEaXXGaR1TyDi9ljFz2koMQ=s220",
+          "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/pdf",
+          "shared": false,
+          "lastModifyingUser": {
+            "displayName": "Muzammil Rizvi",
+            "kind": "drive#user",
+            "me": true,
+            "permissionId": "10691271571577454627",
+            "emailAddress": "muzammilrizvi977@gmail.com",
+            "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKceiYvqzr0X8_tA0jxKJbWjlo5MvWVX89TPEpAYerwP6sJ2Q_h=s64"
+          },
+          "owners": [
+            {
+              "displayName": "Muzammil Rizvi",
+              "kind": "drive#user",
+              "me": true,
+              "permissionId": "10691271571577454627",
+              "emailAddress": "muzammilrizvi977@gmail.com",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKceiYvqzr0X8_tA0jxKJbWjlo5MvWVX89TPEpAYerwP6sJ2Q_h=s64"
+            }
+          ],
+          "headRevisionId": "0B2yEc-6oLwIfK1FHeDNnYVAxYk5mdm9FQjlrdFhPYXI0WDFJPQ",
+          "webViewLink": "https://drive.google.com/file/d/1XxXXEUATHfmlqGr7fY7T41IQS0ASpFuV/view?usp=drivesdk",
+          "webContentLink": "https://drive.google.com/uc?id=1XxXXEUATHfmlqGr7fY7T41IQS0ASpFuV&export=download",
+          "size": "1774",
+          "viewersCanCopyContent": true,
+          "permissions": [
+            {
+              "id": "10691271571577454627",
+              "displayName": "Muzammil Rizvi",
+              "type": "user",
+              "kind": "drive#permission",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKceiYvqzr0X8_tA0jxKJbWjlo5MvWVX89TPEpAYerwP6sJ2Q_h=s64",
+              "emailAddress": "muzammilrizvi977@gmail.com",
+              "role": "owner",
+              "deleted": false,
+              "pendingOwner": false
+            }
+          ],
+          "hasThumbnail": true,
+          "spaces": [
+            "drive"
+          ],
+          "id": "1XxXXEUATHfmlqGr7fY7T41IQS0ASpFuV",
+          "name": "complex_invoice.pdf",
+          "starred": false,
+          "trashed": false,
+          "explicitlyTrashed": false,
+          "createdTime": "2025-03-02T12:39:54.487Z",
+          "modifiedTime": "2025-03-01T08:25:13.000Z",
+          "modifiedByMeTime": "2025-03-01T08:25:13.000Z",
+          "viewedByMeTime": "2025-03-02T12:39:54.487Z",
+          "quotaBytesUsed": "1774",
+          "version": "3",
+          "originalFilename": "complex_invoice.pdf",
+          "ownedByMe": true,
+          "fullFileExtension": "pdf",
+          "isAppAuthorized": false,
+          "capabilities": {
+            "canChangeViewersCanCopyContent": true,
+            "canEdit": true,
+            "canCopy": true,
+            "canComment": true,
+            "canAddChildren": false,
+            "canDelete": true,
+            "canDownload": true,
+            "canListChildren": false,
+            "canRemoveChildren": false,
+            "canRename": true,
+            "canTrash": true,
+            "canReadRevisions": true,
+            "canChangeCopyRequiresWriterPermission": true,
+            "canMoveItemIntoTeamDrive": true,
+            "canUntrash": true,
+            "canModifyContent": true,
+            "canMoveItemOutOfDrive": true,
+            "canAddMyDriveParent": false,
+            "canRemoveMyDriveParent": true,
+            "canMoveItemWithinDrive": true,
+            "canShare": true,
+            "canMoveChildrenWithinDrive": false,
+            "canModifyContentRestriction": true,
+            "canChangeSecurityUpdateEnabled": false,
+            "canAcceptOwnership": false,
+            "canReadLabels": false,
+            "canModifyLabels": false,
+            "canModifyEditorContentRestriction": true,
+            "canModifyOwnerContentRestriction": true,
+            "canRemoveContentRestriction": false,
+            "canDisableInheritedPermissions": false,
+            "canEnableInheritedPermissions": true
+          },
+          "thumbnailVersion": "1",
+          "modifiedByMe": true,
+          "permissionIds": [
+            "10691271571577454627"
+          ],
+          "linkShareMetadata": {
+            "securityUpdateEligible": false,
+            "securityUpdateEnabled": true
+          },
+          "sha1Checksum": "ec10339939de1288abc44342a73b0034653c89e3",
+          "sha256Checksum": "49b96d4cbe53ac90f1424003b341e7347151ea0f4dcb366eb41104f2fe64c324",
+          "inheritedPermissionsDisabled": false
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Check status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post invoice": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Invoice": {
+      "main": [
+        [
+          {
+            "node": "Post invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger if Invoice Created": {
+      "main": [
+        [
+          {
+            "node": "Download Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check status": {
+      "main": [
+        [
+          {
+            "node": "if success-true",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Check status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PDF in MarkDown": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "create Invoice",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create Invoice": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if success-true": {
+      "main": [
+        [
+          {
+            "node": "Get PDF in MarkDown",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crete line items": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Crete line items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f886f08f-05a7-4d59-bcd7-3fce7eb46c36",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "67c4fb0aa020440b2e3cd1ca8b657f84aa82778dfb18c0cf9a8dc66f5b3f274f"
+  },
+  "id": "FbpucIc0dKsh6wFU",
+  "tags": []
+}
